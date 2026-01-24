@@ -1,27 +1,26 @@
+import React from "react"
 import type { Metadata } from 'next'
-import './globals.css'
+import '../styles/globals.css'
 
 export const metadata: Metadata = {
-  title: "BiteScout — World's Most Complete Trophy Fishing Database",
-  description: 'AI-powered fishing assistant. Find the perfect charter, lodge, or guide from 1,500+ verified operators worldwide.',
+  title: 'BiteScout - World\'s Most Complete Trophy Fishing Database',
+  description: 'AI-powered charter fishing database. Find your perfect trophy fishing charter in BC, Alaska, and beyond in seconds.',
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
-  },
-  openGraph: {
-    title: 'BiteScout — Trophy Fishing Database',
-    description: 'AI finds your perfect fishing charter in seconds.',
   },
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="font-sans antialiased">
+        {children}
+      </body>
     </html>
   )
 }
