@@ -1,31 +1,27 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: "BiteScout — World's Most Complete Trophy Fishing Database",
   description: 'AI-powered fishing assistant. Find the perfect charter, lodge, or guide from 1,500+ verified operators worldwide.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     title: 'BiteScout — Trophy Fishing Database',
     description: 'AI finds your perfect fishing charter in seconds.',
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen flex flex-col bg-white">
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-      </body>
+      <body>{children}</body>
     </html>
-  );
+  )
 }
