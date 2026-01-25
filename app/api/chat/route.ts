@@ -1,11 +1,11 @@
 export async function POST(req: Request) {
-  const { message } = await req.json();
+  const { message, sessionId } = await req.json();
   
   try {
     const response = await fetch("https://rng-telegram-bot.onrender.com/api/web-chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, sessionId }),
     });
     
     if (!response.ok) {
