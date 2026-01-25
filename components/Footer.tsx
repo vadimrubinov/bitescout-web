@@ -1,9 +1,23 @@
-export default function Footer() {
+import Link from "next/link"
+
+export function Footer() {
   return (
-    <footer className="w-full py-6 px-6 text-center text-gray-500 text-sm">
-      <div className="max-w-4xl mx-auto">
-        <p>© 2026 BiteScout · <a href="/about" className="hover:text-primary">About</a> · <a href="mailto:gofishing@bitescout.com" className="hover:text-primary">Contact</a></p>
+    <footer className="w-full py-8 px-4 md:px-6 border-t border-border">
+      <div className="max-w-[800px] mx-auto text-center text-sm text-muted-foreground">
+        <p>
+          © 2026 BiteScout •{" "}
+          <Link href="/about" className="hover:text-foreground transition-colors">
+            About
+          </Link>{" "}
+          •{" "}
+          <a 
+            href="mailto:gofishing@bitescout.com" 
+            className="hover:text-foreground transition-colors"
+          >
+            Contact
+          </a>
+        </p>
       </div>
     </footer>
-  );
+  )
 }
