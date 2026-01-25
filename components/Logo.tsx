@@ -1,7 +1,9 @@
-export default function Logo() {
+import Link from "next/link"
+
+export function Logo() {
   return (
-    <a href="/" className="text-xl font-bold text-primary">
+    <Link href="/" className="text-xl font-bold text-primary">
       BiteScout
-    </a>
-  );
+    </Link>
+  )
 }
