@@ -1,27 +1,28 @@
+import React from "react"
 import type { Metadata } from 'next'
-import '../styles/globals.css'
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BiteScout — World's Most Complete Trophy Fishing Database",
-  description: 'AI-powered fishing assistant. Find the perfect charter, lodge, or guide from 1,500+ verified operators worldwide.',
+  title: 'BiteScout - World\'s Most Complete Trophy Fishing Database',
+  description: 'Find the perfect fishing charter with AI-powered search. Compare operators, get quotes, and book your dream fishing trip.',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
-  openGraph: {
-    title: 'BiteScout — Trophy Fishing Database',
-    description: 'AI finds your perfect fishing charter in seconds.',
+    icon: '/favicon.svg',
   },
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${inter.className} antialiased`}>
+        {children}
+      </body>
     </html>
   )
 }
