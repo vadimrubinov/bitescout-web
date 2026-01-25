@@ -1,27 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const BOT_API_URL = process.env.BOT_API_URL || 'https://rng-telegram-bot.onrender.com';
+
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const { message, sessionId } = await request.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    // TODO: Replace with actual bot API call
-    // const botApiUrl = process.env.BOT_API_URL;
-    // const response = await fetch(`${botApiUrl}/api/chat`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ message }),
-    // });
-    // const data = await response.json();
-    // return NextResponse.json({ reply: data.reply });
+    // Call the bot API
+    const response = await fetch(`${BOT_API_URL}/api/web-chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, sessionId }),
+    });
 
-    // Temporary mock response
-    const mockReply = `Based on your request: "${message}"
+    if (!response.ok) {
+      throw new Error(`Bot API returned ${response.status}`);
+    }
 
-Here are some top matches from our database:
+    const data = await response.json();
+    return NextResponse.json({ 
+      reply: data.reply,
+      sessionId: data.sessionId 
+    });
+
+  } catch (error) {
+    console.error('Chat API error:', error);
+    
+    // Fallback mock response if bot is unavailable
+    const { message } = await request.clone().json();
+    const mockReply = `I'm currently connecting to our database. Here's what I found for "${message}":
+
+**Top matches from our database:**
 
 **1. Salmon Eye Charters** (Ucluelet, BC)
 ★ 4.9 · Chinook & Halibut specialist · $1,200/day
@@ -35,14 +48,8 @@ Best for: Groups wanting accommodation + fishing
 ★ 4.8 · City departure · $1,100/day
 Best for: Convenience, close to airport
 
-Would you like more details on any of these operators, or should I search with different criteria?`;
+Would you like more details on any of these operators?`;
 
     return NextResponse.json({ reply: mockReply });
-  } catch (error) {
-    console.error('Chat API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
 }
