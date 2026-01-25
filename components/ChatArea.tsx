@@ -24,17 +24,15 @@ export function ChatArea({
   isLoading,
 }: ChatAreaProps) {
   return (
-    <div className="w-full space-y-4">
-      <div className="space-y-4 max-h-[400px] overflow-y-auto">
+    <div className="w-full space-y-6">
+      <div className="space-y-6">
         {messages.map((message, index) => (
           <ChatMessage key={index} role={message.role} content={message.content} />
         ))}
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-muted rounded-lg px-4 py-3">
-              <p className="text-xs font-medium mb-1 opacity-70">Scout</p>
-              <div className="text-sm text-muted-foreground">Searching...</div>
-            </div>
+          <div className="text-left">
+            <p className="text-xs font-medium mb-1 opacity-70">Scout</p>
+            <div className="text-sm text-muted-foreground">Searching...</div>
           </div>
         )}
       </div>
