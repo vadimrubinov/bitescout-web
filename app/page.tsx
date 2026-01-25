@@ -23,6 +23,7 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [hasStartedChat, setHasStartedChat] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
 
   const handleSubmit = async () => {
     if (!inputValue.trim() || isLoading) return
@@ -37,11 +38,14 @@ export default function Home() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({ message: userMessage, sessionId }),
       })
 
       const data = await response.json()
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }])
+      if (data.sessionId) {
+        setSessionId(data.sessionId)
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
