@@ -1,55 +1,68 @@
-import Link from 'next/link'
+import { Header } from "@/components/Header"
+import { Footer } from "@/components/Footer"
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b">
-        <div className="max-w-3xl mx-auto px-4 py-4">
-          <Link href="/" className="text-xl font-bold text-[#1E3A5F]">
-            BiteScout
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col">
+      <Header />
 
-      <main className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">About BiteScout</h1>
-        
-        <div className="prose prose-lg">
-          <p className="text-gray-600 mb-6">
-            BiteScout is building the world&apos;s most comprehensive trophy fishing 
-            database — every charter, lodge, and guide, verified and searchable.
-          </p>
+      <main className="flex-1 py-16 px-4 md:px-6">
+        <div className="max-w-[800px] mx-auto space-y-12">
+          <div className="space-y-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+              About BiteScout
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              BiteScout is building the world&apos;s most comprehensive trophy fishing
+              database — every charter, lodge, and guide, verified and searchable.
+            </p>
+          </div>
 
-          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Why we built this</h2>
-          <p className="text-gray-600 mb-6">
-            Planning a fishing trip shouldn&apos;t take hours of Googling. 
-            Our AI assistant knows the waters, the operators, and the seasons.
-          </p>
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold text-foreground">
+              Why we built this
+            </h2>
+            <p className="text-muted-foreground">
+              Planning a fishing trip shouldn&apos;t take hours of Googling. Our AI
+              assistant knows the waters, the operators, and the seasons.
+            </p>
+          </section>
 
-          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Current coverage</h2>
-          <ul className="text-gray-600 mb-6 list-disc pl-6">
-            <li><strong>British Columbia:</strong> 1,200+ operators</li>
-            <li><strong>Alaska:</strong> 200+ operators</li>
-            <li><strong>Expanding:</strong> Florida, Mexico, Norway, New Zealand...</li>
-          </ul>
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold text-foreground">
+              Current coverage
+            </h2>
+            <ul className="space-y-2 text-muted-foreground">
+              <li>• BC: 1,200+ operators</li>
+              <li>• Alaska: 200+ operators</li>
+              <li>• Expanding to Florida, Mexico, Norway, New Zealand</li>
+            </ul>
+          </section>
 
-          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">How it works</h2>
-          <ol className="text-gray-600 mb-6 list-decimal pl-6">
-            <li>Tell us what you&apos;re looking for</li>
-            <li>AI finds the best matches from our database</li>
-            <li>Compare, ask questions, get quotes</li>
-          </ol>
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold text-foreground">How it works</h2>
+            <ol className="space-y-2 text-muted-foreground list-decimal list-inside">
+              <li>Tell us what you&apos;re looking for</li>
+              <li>AI finds best matches</li>
+              <li>Compare, ask questions, get quotes</li>
+            </ol>
+          </section>
 
-          <h2 className="text-xl font-semibold text-gray-900 mt-8 mb-4">Contact</h2>
-          <p className="text-gray-600 mb-6">
-            Questions? Feedback? Email us: <a href="mailto:gofishing@bitescout.com" className="text-[#1E3A5F] underline">gofishing@bitescout.com</a>
-          </p>
-        </div>
-
-        <div className="mt-12 pt-8 border-t text-center text-gray-500 text-sm">
-          © 2026 BiteScout
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold text-foreground">Contact</h2>
+            <p className="text-muted-foreground">
+              <a
+                href="mailto:gofishing@bitescout.com"
+                className="text-primary hover:underline"
+              >
+                gofishing@bitescout.com
+              </a>
+            </p>
+          </section>
         </div>
       </main>
+
+      <Footer />
     </div>
   )
 }
