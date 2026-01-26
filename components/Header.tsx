@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { Logo } from "./Logo"
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
