@@ -1,12 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Logo } from "./Logo"
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs'
 
 export function Header() {
   const [isLoading, setIsLoading] = useState(false)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
+  const { isSignedIn } = useUser()
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch('/api/subscription')
+        .then(res => res.json())
+        .then(data => {
+          setSubscriptionStatus(data.subscription_status)
+        })
+        .catch(err => console.error('Failed to fetch subscription:', err))
+    }
+  }, [isSignedIn])
 
   const handleUpgrade = async () => {
     setIsLoading(true)
@@ -27,6 +40,8 @@ export function Header() {
       setIsLoading(false)
     }
   }
+
+  const isPro = subscriptionStatus === 'active'
 
   return (
     <header className="w-full py-4 px-4 md:px-6">
@@ -54,13 +69,19 @@ export function Header() {
           </SignedOut>
           
           <SignedIn>
-            <button 
-              onClick={handleUpgrade}
-              disabled={isLoading}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              {isLoading ? '...' : 'Upgrade $29/yr'}
-            </button>
+            {isPro ? (
+              <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                ✨ Pro
+              </span>
+            ) : (
+              <button 
+                onClick={handleUpgrade}
+                disabled={isLoading}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {isLoading ? '...' : 'Upgrade $29/yr'}
+              </button>
+            )}
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
         </nav>
