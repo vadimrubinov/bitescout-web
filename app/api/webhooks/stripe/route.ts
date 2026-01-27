@@ -7,17 +7,20 @@ const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID_CHAT
 
 async function updateUserSubscription(clerkUserId: string, status: string, stripeCustomerId: string, expiresAt?: string) {
+  console.log(`Updating user ${clerkUserId} with status ${status}`)
+  
   // Найти пользователя по clerk_id
-  const searchResponse = await fetch(
-    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Users?filterByFormula={clerk_id}="${clerkUserId}"`,
-    {
-      headers: {
-        'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-      },
-    }
-  )
+  const searchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Users?filterByFormula={clerk_id}="${clerkUserId}"`
+  console.log(`Search URL: ${searchUrl}`)
+  
+  const searchResponse = await fetch(searchUrl, {
+    headers: {
+      'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+    },
+  })
 
   const searchData = await searchResponse.json()
+  console.log(`Search result: ${JSON.stringify(searchData)}`)
   
   if (searchData.records && searchData.records.length > 0) {
     const record = searchData.records[0]
@@ -35,7 +38,9 @@ async function updateUserSubscription(clerkUserId: string, status: string, strip
       updateFields.subscription_expires = expiresAt
     }
 
-    await fetch(
+    console.log(`Updating record ${record.id} with fields: ${JSON.stringify(updateFields)}`)
+
+    const updateResponse = await fetch(
       `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Users/${record.id}`,
       {
         method: 'PATCH',
@@ -46,8 +51,11 @@ async function updateUserSubscription(clerkUserId: string, status: string, strip
         body: JSON.stringify({ fields: updateFields }),
       }
     )
-
-    console.log(`Updated subscription for user ${clerkUserId}: ${status}`)
+    
+    const updateResult = await updateResponse.json()
+    console.log(`Update result: ${JSON.stringify(updateResult)}`)
+  } else {
+    console.log(`No user found with clerk_id: ${clerkUserId}`)
   }
 }
 
@@ -56,7 +64,7 @@ async function getSubscriptionDetails(subscriptionId: string) {
     `https://api.stripe.com/v1/subscriptions/${subscriptionId}`,
     {
       headers: {
-        'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
+        'Authorization': `Basic ${Buffer.from(STRIPE_SECRET_KEY + ':').toString('base64')}`,
       },
     }
   )
@@ -64,25 +72,28 @@ async function getSubscriptionDetails(subscriptionId: string) {
 }
 
 export async function POST(req: Request) {
+  console.log('Stripe webhook received')
+  
   const body = await req.text()
   const headerPayload = await headers()
   const signature = headerPayload.get('stripe-signature')
 
-  if (!signature || !STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
-  }
+  console.log(`Signature present: ${!!signature}`)
+  console.log(`Webhook secret present: ${!!STRIPE_WEBHOOK_SECRET}`)
+  console.log(`Airtable API key present: ${!!AIRTABLE_API_KEY}`)
+  console.log(`Airtable base ID: ${AIRTABLE_BASE_ID}`)
 
-  // Простая верификация (для production лучше использовать stripe SDK)
-  // Пока обрабатываем без верификации подписи для MVP
-  
+  // Пока пропускаем верификацию подписи для отладки
   let event
   try {
     event = JSON.parse(body)
   } catch (err) {
+    console.error('Failed to parse JSON:', err)
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
   const { type, data } = event
+  console.log(`Event type: ${type}`)
 
   try {
     switch (type) {
@@ -92,11 +103,19 @@ export async function POST(req: Request) {
         const customerId = session.customer
         const subscriptionId = session.subscription
 
+        console.log(`Checkout completed - clerkUserId: ${clerkUserId}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`)
+
         if (clerkUserId && subscriptionId) {
           const subscription = await getSubscriptionDetails(subscriptionId)
-          const expiresAt = new Date(subscription.current_period_end * 1000).toISOString()
+          console.log(`Subscription details: ${JSON.stringify(subscription)}`)
+          
+          const expiresAt = subscription.current_period_end 
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : undefined
           
           await updateUserSubscription(clerkUserId, 'active', customerId, expiresAt)
+        } else {
+          console.log('Missing clerkUserId or subscriptionId')
         }
         break
       }
@@ -107,7 +126,6 @@ export async function POST(req: Request) {
         const status = subscription.status === 'active' ? 'active' : 'cancelled'
         const expiresAt = new Date(subscription.current_period_end * 1000).toISOString()
 
-        // Найти пользователя по stripe_customer_id
         const searchResponse = await fetch(
           `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Users?filterByFormula={stripe_customer_id}="${customerId}"`,
           {
@@ -177,9 +195,10 @@ export async function POST(req: Request) {
       }
     }
 
+    console.log('Webhook processed successfully')
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Webhook error:', error)
-    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
+    return NextResponse.json({ error: 'Webhook handler failed', details: String(error) }, { status: 500 })
   }
 }
