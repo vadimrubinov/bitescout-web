@@ -1,12 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { useUser } from "@clerk/nextjs"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { ChatInput } from "@/components/ChatInput"
 import { ChatArea } from "@/components/ChatArea"
 import { ValueProps } from "@/components/ValueProps"
 import { Coverage } from "@/components/Coverage"
+import { GuestBanner } from "@/components/GuestBanner"
+import { LimitBanner } from "@/components/LimitBanner"
 
 interface Message {
   role: "user" | "assistant"
@@ -19,14 +22,19 @@ const exampleQueries = [
 ]
 
 export default function Home() {
+  const { isSignedIn } = useUser()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [hasStartedChat, setHasStartedChat] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [remainingMessages, setRemainingMessages] = useState<number | null>(null)
+  const [limitReached, setLimitReached] = useState(false)
+
+  const isGuest = !isSignedIn
 
   const handleSubmit = async () => {
-    if (!inputValue.trim() || isLoading) return
+    if (!inputValue.trim() || isLoading || limitReached) return
 
     const userMessage = inputValue.trim()
     setInputValue("")
@@ -43,8 +51,15 @@ export default function Home() {
 
       const data = await response.json()
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }])
+      
       if (data.sessionId) {
         setSessionId(data.sessionId)
+      }
+      if (data.remainingMessages !== null && data.remainingMessages !== undefined) {
+        setRemainingMessages(data.remainingMessages)
+      }
+      if (data.limitReached) {
+        setLimitReached(true)
       }
     } catch {
       setMessages((prev) => [
@@ -99,14 +114,32 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="max-w-[600px] mx-auto">
+              <div className="max-w-[600px] mx-auto space-y-4">
                 <ChatArea
                   messages={messages}
                   inputValue={inputValue}
                   onInputChange={setInputValue}
                   onSubmit={handleSubmit}
                   isLoading={isLoading}
+                  disabled={limitReached}
                 />
+
+                {/* Remaining messages indicator */}
+                {remainingMessages !== null && !limitReached && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    {remainingMessages} message{remainingMessages !== 1 ? "s" : ""} remaining today
+                  </p>
+                )}
+
+                {/* Limit reached banner */}
+                {limitReached && (
+                  <LimitBanner isGuest={isGuest} />
+                )}
+
+                {/* Guest banner - show after first exchange */}
+                {isGuest && !limitReached && messages.length >= 2 && (
+                  <GuestBanner />
+                )}
               </div>
             )}
           </div>
