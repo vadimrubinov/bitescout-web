@@ -14,6 +14,7 @@ interface ChatAreaProps {
   onInputChange: (value: string) => void
   onSubmit: () => void
   isLoading: boolean
+  disabled?: boolean
 }
 
 export function ChatArea({
@@ -22,6 +23,7 @@ export function ChatArea({
   onInputChange,
   onSubmit,
   isLoading,
+  disabled = false,
 }: ChatAreaProps) {
   return (
     <div className="w-full space-y-6">
@@ -36,15 +38,17 @@ export function ChatArea({
           </div>
         )}
       </div>
-      <ChatInput
-        value={inputValue}
-        onChange={onInputChange}
-        onSubmit={onSubmit}
-        isLoading={isLoading}
-        placeholder="Ask a follow-up question..."
-        buttonText="Send →"
-        rows={2}
-      />
+      {!disabled && (
+        <ChatInput
+          value={inputValue}
+          onChange={onInputChange}
+          onSubmit={onSubmit}
+          isLoading={isLoading}
+          placeholder="Ask a follow-up question..."
+          buttonText="Send →"
+          rows={2}
+        />
+      )}
     </div>
   )
 }
