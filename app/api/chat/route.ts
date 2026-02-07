@@ -12,10 +12,18 @@ export async function POST(req: Request) {
     // Not authenticated — guest user
   }
 
+  // Extract real client IP to pass through to rng-ai-service
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+
   try {
     const response = await fetch("https://rng-ai-service.onrender.com/api/web-chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Real-IP": clientIp,
+      },
       body: JSON.stringify({ 
         message, 
         sessionId,
