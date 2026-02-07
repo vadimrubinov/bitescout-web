@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useUser } from "@clerk/nextjs"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
@@ -32,6 +32,19 @@ export default function Home() {
   const [limitReached, setLimitReached] = useState(false)
 
   const isGuest = !isSignedIn
+
+  // Fetch plan info when auth state changes (login/logout)
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch("/api/plan-info", { method: "POST" })
+        .then(res => res.json())
+        .then(data => {
+          setRemainingMessages(data.remainingMessages ?? null)
+          setLimitReached(data.limitReached || false)
+        })
+        .catch(() => {})
+    }
+  }, [isSignedIn])
 
   const handleSubmit = async () => {
     if (!inputValue.trim() || isLoading || limitReached) return
