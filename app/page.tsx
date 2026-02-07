@@ -30,6 +30,7 @@ export default function Home() {
   const [hasStartedChat, setHasStartedChat] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [chatId, setChatId] = useState<string | null>(null)
+  const [scoutId, setScoutId] = useState<string | null>(null)
   const [remainingMessages, setRemainingMessages] = useState<number | null>(null)
   const [limitReached, setLimitReached] = useState(false)
   const [sidebarRefresh, setSidebarRefresh] = useState(0)
@@ -62,7 +63,7 @@ export default function Home() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, sessionId, chatId }),
+        body: JSON.stringify({ message: userMessage, sessionId, chatId, scoutId }),
       })
 
       const data = await response.json()
@@ -70,13 +71,14 @@ export default function Home() {
       
       if (data.sessionId) setSessionId(data.sessionId)
       if (data.chatId) setChatId(data.chatId)
+      if (data.scoutId) setScoutId(data.scoutId)
       if (data.remainingMessages !== null && data.remainingMessages !== undefined) {
         setRemainingMessages(data.remainingMessages)
       }
       if (data.limitReached) setLimitReached(true)
 
-      // Refresh sidebar after first message in a chat (new chat appears in list)
-      if (!chatId && data.chatId) {
+      // Refresh sidebar after first message (new scout appears in list)
+      if (!scoutId && data.scoutId) {
         setSidebarRefresh((n) => n + 1)
       }
     } catch {
@@ -93,26 +95,38 @@ export default function Home() {
     setInputValue(query)
   }
 
-  const handleNewChat = () => {
+  const handleNewScout = async () => {
+    // Tell backend to complete current active scout
+    if (isSignedIn) {
+      try {
+        await fetch("/api/new-scout", { method: "POST" })
+      } catch {
+        // Non-critical
+      }
+    }
+
     setMessages([])
     setSessionId(null)
     setChatId(null)
+    setScoutId(null)
     setHasStartedChat(false)
     setLimitReached(false)
+    setSidebarRefresh((n) => n + 1)
   }
 
-  const handleSelectChat = async (selectedChatId: string) => {
-    setChatId(selectedChatId)
+  const handleSelectScout = async (selectedScoutId: string) => {
+    setScoutId(selectedScoutId)
     setSessionId(null)
+    setChatId(null)
     setHasStartedChat(true)
     setMessages([])
     setIsLoading(true)
 
     try {
-      const res = await fetch("/api/session-messages", {
+      const res = await fetch("/api/scout-messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatId: selectedChatId }),
+        body: JSON.stringify({ scoutId: selectedScoutId }),
       })
       const data = await res.json()
       const msgs: Message[] = (data.messages || []).map((m: any) => ({
@@ -135,9 +149,9 @@ export default function Home() {
         {/* Sidebar for logged-in users */}
         {isSignedIn && (
           <Sidebar
-            activeChatId={chatId}
-            onSelectChat={handleSelectChat}
-            onNewChat={handleNewChat}
+            activeScoutId={scoutId}
+            onSelectScout={handleSelectScout}
+            onNewScout={handleNewScout}
             refreshTrigger={sidebarRefresh}
           />
         )}
