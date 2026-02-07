@@ -10,6 +10,7 @@ import { ValueProps } from "@/components/ValueProps"
 import { Coverage } from "@/components/Coverage"
 import { GuestBanner } from "@/components/GuestBanner"
 import { LimitBanner } from "@/components/LimitBanner"
+import { Sidebar } from "@/components/Sidebar"
 
 interface Message {
   role: "user" | "assistant"
@@ -28,12 +29,14 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasStartedChat, setHasStartedChat] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [chatId, setChatId] = useState<string | null>(null)
   const [remainingMessages, setRemainingMessages] = useState<number | null>(null)
   const [limitReached, setLimitReached] = useState(false)
+  const [sidebarRefresh, setSidebarRefresh] = useState(0)
 
   const isGuest = !isSignedIn
 
-  // Fetch plan info when auth state changes (login/logout)
+  // Fetch plan info when auth state changes
   useEffect(() => {
     if (isSignedIn) {
       fetch("/api/plan-info", { method: "POST" })
@@ -59,20 +62,22 @@ export default function Home() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, sessionId }),
+        body: JSON.stringify({ message: userMessage, sessionId, chatId }),
       })
 
       const data = await response.json()
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }])
       
-      if (data.sessionId) {
-        setSessionId(data.sessionId)
-      }
+      if (data.sessionId) setSessionId(data.sessionId)
+      if (data.chatId) setChatId(data.chatId)
       if (data.remainingMessages !== null && data.remainingMessages !== undefined) {
         setRemainingMessages(data.remainingMessages)
       }
-      if (data.limitReached) {
-        setLimitReached(true)
+      if (data.limitReached) setLimitReached(true)
+
+      // Refresh sidebar after first message in a chat (new chat appears in list)
+      if (!chatId && data.chatId) {
+        setSidebarRefresh((n) => n + 1)
       }
     } catch {
       setMessages((prev) => [
@@ -88,81 +93,131 @@ export default function Home() {
     setInputValue(query)
   }
 
+  const handleNewChat = () => {
+    setMessages([])
+    setSessionId(null)
+    setChatId(null)
+    setHasStartedChat(false)
+    setLimitReached(false)
+  }
+
+  const handleSelectChat = async (selectedChatId: string) => {
+    setChatId(selectedChatId)
+    setSessionId(null)
+    setHasStartedChat(true)
+    setMessages([])
+    setIsLoading(true)
+
+    try {
+      const res = await fetch("/api/session-messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId: selectedChatId }),
+      })
+      const data = await res.json()
+      const msgs: Message[] = (data.messages || []).map((m: any) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }))
+      setMessages(msgs)
+    } catch {
+      setMessages([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-16 md:py-24 px-4 md:px-6">
-          <div className="max-w-[800px] mx-auto text-center space-y-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground text-balance">
-              World&apos;s most complete trophy fishing database
-            </h1>
+      <div className="flex-1 flex">
+        {/* Sidebar for logged-in users */}
+        {isSignedIn && (
+          <Sidebar
+            activeChatId={chatId}
+            onSelectChat={handleSelectChat}
+            onNewChat={handleNewChat}
+            refreshTrigger={sidebarRefresh}
+          />
+        )}
 
-            {!hasStartedChat ? (
-              <div className="max-w-[600px] mx-auto space-y-4">
-                <ChatInput
-                  value={inputValue}
-                  onChange={setInputValue}
-                  onSubmit={handleSubmit}
-                  isLoading={isLoading}
-                  placeholder="Salmon fishing in BC, July, 4 people, budget around $1500..."
-                  buttonText="Ask Scout →"
-                  rows={3}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Try:{" "}
-                  {exampleQueries.map((query, index) => (
-                    <span key={query}>
-                      <button
-                        onClick={() => handleExampleClick(query)}
-                        className="text-primary hover:underline"
-                      >
-                        {query}
-                      </button>
-                      {index < exampleQueries.length - 1 && " • "}
-                    </span>
-                  ))}
-                </p>
-              </div>
-            ) : (
-              <div className="max-w-[600px] mx-auto space-y-4">
-                <ChatArea
-                  messages={messages}
-                  inputValue={inputValue}
-                  onInputChange={setInputValue}
-                  onSubmit={handleSubmit}
-                  isLoading={isLoading}
-                  disabled={limitReached}
-                />
+        <main className="flex-1 min-w-0">
+          {/* Hero Section */}
+          <section className="py-16 md:py-24 px-4 md:px-6">
+            <div className="max-w-[800px] mx-auto text-center space-y-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground text-balance">
+                World&apos;s most complete trophy fishing database
+              </h1>
 
-                {/* Remaining messages indicator */}
-                {remainingMessages !== null && !limitReached && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    {remainingMessages} message{remainingMessages !== 1 ? "s" : ""} remaining today
+              {!hasStartedChat ? (
+                <div className="max-w-[600px] mx-auto space-y-4">
+                  <ChatInput
+                    value={inputValue}
+                    onChange={setInputValue}
+                    onSubmit={handleSubmit}
+                    isLoading={isLoading}
+                    placeholder="Salmon fishing in BC, July, 4 people, budget around $1500..."
+                    buttonText="Ask Scout →"
+                    rows={3}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Try:{" "}
+                    {exampleQueries.map((query, index) => (
+                      <span key={query}>
+                        <button
+                          onClick={() => handleExampleClick(query)}
+                          className="text-primary hover:underline"
+                        >
+                          {query}
+                        </button>
+                        {index < exampleQueries.length - 1 && " • "}
+                      </span>
+                    ))}
                   </p>
-                )}
+                </div>
+              ) : (
+                <div className="max-w-[600px] mx-auto space-y-4">
+                  <ChatArea
+                    messages={messages}
+                    inputValue={inputValue}
+                    onInputChange={setInputValue}
+                    onSubmit={handleSubmit}
+                    isLoading={isLoading}
+                    disabled={limitReached}
+                  />
 
-                {/* Limit reached banner */}
-                {limitReached && (
-                  <LimitBanner isGuest={isGuest} />
-                )}
+                  {/* Remaining messages indicator */}
+                  {remainingMessages !== null && !limitReached && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      {remainingMessages} message{remainingMessages !== 1 ? "s" : ""} remaining today
+                    </p>
+                  )}
 
-                {/* Guest banner - show after first exchange */}
-                {isGuest && !limitReached && messages.length >= 2 && (
-                  <GuestBanner />
-                )}
-              </div>
-            )}
-          </div>
-        </section>
+                  {/* Limit reached banner */}
+                  {limitReached && (
+                    <LimitBanner isGuest={isGuest} />
+                  )}
 
-        <ValueProps />
-        <Coverage />
-      </main>
+                  {/* Guest banner - show after first exchange */}
+                  {isGuest && !limitReached && messages.length >= 2 && (
+                    <GuestBanner />
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
 
-      <Footer />
+          {!hasStartedChat && (
+            <>
+              <ValueProps />
+              <Coverage />
+            </>
+          )}
+        </main>
+      </div>
+
+      {!hasStartedChat && <Footer />}
     </div>
   )
 }
