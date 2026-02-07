@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 
 export async function POST(req: Request) {
-  const { message, sessionId, chatId } = await req.json();
+  const { message, sessionId, chatId, scoutId } = await req.json();
   
   // Get clerk user ID if authenticated (returns null for guests)
   let clerkUserId: string | null = null;
@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         message, 
         sessionId,
         chatId,
+        scoutId,
         clerkUserId,
       }),
     });
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
       reply: data.reply,
       sessionId: data.sessionId,
       chatId: data.chatId || null,
+      scoutId: data.scoutId || null,
       plan: data.plan || "guest",
       isGuest: data.isGuest !== false,
       remainingMessages: data.remainingMessages ?? null,
