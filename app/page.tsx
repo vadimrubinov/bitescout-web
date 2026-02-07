@@ -31,6 +31,10 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [chatId, setChatId] = useState<string | null>(null)
   const [scoutId, setScoutId] = useState<string | null>(null)
+  const [scoutBrief, setScoutBrief] = useState<string | null>(null)
+  const [scoutTags, setScoutTags] = useState<string>("")
+  const [scoutEntities, setScoutEntities] = useState<string>("")
+  const [scoutStatus, setScoutStatus] = useState<string>("active")
   const [remainingMessages, setRemainingMessages] = useState<number | null>(null)
   const [limitReached, setLimitReached] = useState(false)
   const [sidebarRefresh, setSidebarRefresh] = useState(0)
@@ -57,6 +61,8 @@ export default function Home() {
     setInputValue("")
     setMessages((prev) => [...prev, { role: "user", content: userMessage }])
     setHasStartedChat(true)
+    setScoutBrief(null)
+    setScoutStatus("active")
     setIsLoading(true)
 
     try {
@@ -109,6 +115,10 @@ export default function Home() {
     setSessionId(null)
     setChatId(null)
     setScoutId(null)
+    setScoutBrief(null)
+    setScoutTags("")
+    setScoutEntities("")
+    setScoutStatus("active")
     setHasStartedChat(false)
     setLimitReached(false)
     setSidebarRefresh((n) => n + 1)
@@ -120,6 +130,10 @@ export default function Home() {
     setChatId(null)
     setHasStartedChat(true)
     setMessages([])
+    setScoutBrief(null)
+    setScoutTags("")
+    setScoutEntities("")
+    setScoutStatus("active")
     setIsLoading(true)
 
     try {
@@ -129,11 +143,23 @@ export default function Home() {
         body: JSON.stringify({ scoutId: selectedScoutId }),
       })
       const data = await res.json()
-      const msgs: Message[] = (data.messages || []).map((m: any) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      }))
-      setMessages(msgs)
+
+      if (data.type === "brief") {
+        // Completed/archived scout — show brief card
+        setScoutBrief(data.brief || "")
+        setScoutTags(data.tags || "")
+        setScoutEntities(data.entities || "")
+        setScoutStatus(data.status || "completed")
+        setMessages([])
+      } else {
+        // Active scout — show raw messages
+        setScoutBrief(null)
+        const msgs: Message[] = (data.messages || []).map((m: any) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }))
+        setMessages(msgs)
+      }
     } catch {
       setMessages([])
     } finally {
@@ -198,7 +224,10 @@ export default function Home() {
                     onInputChange={setInputValue}
                     onSubmit={handleSubmit}
                     isLoading={isLoading}
-                    disabled={limitReached}
+                    disabled={limitReached || scoutStatus !== "active"}
+                    scoutBrief={scoutBrief}
+                    scoutTags={scoutTags}
+                    scoutEntities={scoutEntities}
                   />
 
                   {/* Remaining messages indicator */}
@@ -235,3 +264,4 @@ export default function Home() {
     </div>
   )
 }
+
