@@ -2,17 +2,18 @@
 
 import { useState, useEffect } from "react"
 
-interface ChatSession {
+interface Scout {
   recordId: string
-  preview: string
-  createdAt: string
+  title: string
   status: string
+  messageCount: number
+  createdAt: string
 }
 
 interface SidebarProps {
-  activeChatId: string | null
-  onSelectChat: (chatId: string) => void
-  onNewChat: () => void
+  activeScoutId: string | null
+  onSelectScout: (scoutId: string) => void
+  onNewScout: () => void
   refreshTrigger: number
 }
 
@@ -31,17 +32,23 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString([], { month: "short", day: "numeric" })
 }
 
-export function Sidebar({ activeChatId, onSelectChat, onNewChat, refreshTrigger }: SidebarProps) {
-  const [sessions, setSessions] = useState<ChatSession[]>([])
+function statusIcon(status: string): string {
+  if (status === "active") return "🟢"
+  if (status === "completed") return "✅"
+  return "📋"
+}
+
+export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigger }: SidebarProps) {
+  const [scouts, setScouts] = useState<Scout[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     setIsLoading(true)
-    fetch("/api/sessions", { method: "POST" })
+    fetch("/api/scouts", { method: "POST" })
       .then((res) => res.json())
       .then((data) => {
-        setSessions(data.sessions || [])
+        setScouts(data.scouts || [])
       })
       .catch(() => {})
       .finally(() => setIsLoading(false))
@@ -53,7 +60,7 @@ export function Sidebar({ activeChatId, onSelectChat, onNewChat, refreshTrigger 
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="md:hidden fixed top-4 left-4 z-50 p-2 bg-background border border-border rounded-md shadow-sm"
-        aria-label="Toggle chat history"
+        aria-label="Toggle scouts"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           {isOpen ? (
@@ -85,40 +92,41 @@ export function Sidebar({ activeChatId, onSelectChat, onNewChat, refreshTrigger 
         <div className="p-3 border-b border-border">
           <button
             onClick={() => {
-              onNewChat()
+              onNewScout()
               setIsOpen(false)
             }}
             className="w-full px-3 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
           >
-            + New Chat
+            + New Scout
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <p className="p-3 text-sm text-muted-foreground">Loading...</p>
-          ) : sessions.length === 0 ? (
-            <p className="p-3 text-sm text-muted-foreground">No chats yet</p>
+          ) : scouts.length === 0 ? (
+            <p className="p-3 text-sm text-muted-foreground">No scouts yet</p>
           ) : (
             <ul className="py-1">
-              {sessions.map((s) => (
+              {scouts.map((s) => (
                 <li key={s.recordId}>
                   <button
                     onClick={() => {
-                      onSelectChat(s.recordId)
+                      onSelectScout(s.recordId)
                       setIsOpen(false)
                     }}
                     className={`
                       w-full text-left px-3 py-2 text-sm
                       hover:bg-muted transition-colors
-                      ${activeChatId === s.recordId ? "bg-muted font-medium" : ""}
+                      ${activeScoutId === s.recordId ? "bg-muted font-medium" : ""}
                     `}
                   >
                     <p className="truncate text-foreground">
-                      {s.preview || "New chat"}
+                      {statusIcon(s.status)} {s.title || "New Scout"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {formatDate(s.createdAt)}
+                      {s.messageCount > 0 && ` · ${s.messageCount} msg`}
                     </p>
                   </button>
                 </li>
