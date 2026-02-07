@@ -6,6 +6,7 @@ interface Scout {
   recordId: string
   title: string
   status: string
+  tags: string
   messageCount: number
   createdAt: string
 }
@@ -36,6 +37,17 @@ function statusIcon(status: string): string {
   if (status === "active") return "🟢"
   if (status === "completed") return "✅"
   return "📋"
+}
+
+function parseTags(raw: string): string[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed.slice(0, 3)
+  } catch {
+    return raw.split(",").map((t: string) => t.trim()).filter(Boolean).slice(0, 3)
+  }
+  return []
 }
 
 export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigger }: SidebarProps) {
@@ -128,6 +140,18 @@ export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigg
                       {formatDate(s.createdAt)}
                       {s.messageCount > 0 && ` · ${s.messageCount} msg`}
                     </p>
+                    {parseTags(s.tags).length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {parseTags(s.tags).map((tag, i) => (
+                          <span
+                            key={i}
+                            className="inline-block px-1.5 py-0 text-[10px] rounded-full bg-primary/10 text-primary/70"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </button>
                 </li>
               ))}
@@ -138,3 +162,4 @@ export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigg
     </>
   )
 }
+
