@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { ChatMessage } from "./ChatMessage"
 import { ChatInput } from "./ChatInput"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -118,10 +119,17 @@ export function ChatArea({
   scoutEntities = "",
   isLoadingMessages = false,
 }: ChatAreaProps) {
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages, isLoading])
+
   // Loading messages (opening a scout)
   if (isLoadingMessages) {
     return (
-      <div className="w-full space-y-6">
+      <div className="w-full flex-1">
         <MessagesSkeleton />
       </div>
     )
@@ -130,26 +138,31 @@ export function ChatArea({
   // Completed scout with brief — show brief + input for continuation
   if (scoutBrief) {
     return (
-      <div className="w-full space-y-6">
-        <ScoutBriefCard brief={scoutBrief} tags={scoutTags} entities={scoutEntities} />
+      <div className="w-full flex-1 flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto">
+          <ScoutBriefCard brief={scoutBrief} tags={scoutTags} entities={scoutEntities} />
+        </div>
         {!disabled && (
-          <ChatInput
-            value={inputValue}
-            onChange={onInputChange}
-            onSubmit={onSubmit}
-            isLoading={isLoading}
-            placeholder="Continue this conversation..."
-            buttonText="Send →"
-            rows={2}
-          />
+          <div className="shrink-0 pt-4">
+            <ChatInput
+              value={inputValue}
+              onChange={onInputChange}
+              onSubmit={onSubmit}
+              isLoading={isLoading}
+              placeholder="Continue this conversation..."
+              buttonText="Send →"
+              rows={2}
+            />
+          </div>
         )}
       </div>
     )
   }
 
+  // Active chat — scrollable messages + sticky input
   return (
-    <div className="w-full space-y-6">
-      <div className="space-y-6">
+    <div className="w-full flex-1 flex flex-col min-h-0">
+      <div className="flex-1 overflow-y-auto space-y-6">
         {messages.map((message, index) => (
           <ChatMessage key={index} role={message.role} content={message.content} />
         ))}
@@ -159,17 +172,20 @@ export function ChatArea({
             <div className="text-sm text-muted-foreground">Searching...</div>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
       {!disabled && (
-        <ChatInput
-          value={inputValue}
-          onChange={onInputChange}
-          onSubmit={onSubmit}
-          isLoading={isLoading}
-          placeholder="Ask a follow-up question..."
-          buttonText="Send →"
-          rows={2}
-        />
+        <div className="shrink-0 pt-4">
+          <ChatInput
+            value={inputValue}
+            onChange={onInputChange}
+            onSubmit={onSubmit}
+            isLoading={isLoading}
+            placeholder="Ask a follow-up question..."
+            buttonText="Send →"
+            rows={2}
+          />
+        </div>
       )}
     </div>
   )

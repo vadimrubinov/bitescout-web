@@ -170,10 +170,10 @@ function HomeContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={hasStartedChat ? "h-screen flex flex-col overflow-hidden" : "min-h-screen flex flex-col"}>
       <Header />
 
-      <div className="flex-1 flex">
+      <div className={`flex-1 flex${hasStartedChat ? " min-h-0" : ""}`}>
         {/* Sidebar for logged-in users */}
         {isSignedIn && (
           <Sidebar
@@ -184,15 +184,56 @@ function HomeContent() {
           />
         )}
 
-        <main className="flex-1 min-w-0">
-          {/* Hero Section */}
-          <section className="py-16 md:py-24 px-4 md:px-6">
-            <div className="max-w-[800px] mx-auto text-center space-y-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground text-balance">
-                World&apos;s most complete trophy fishing database
-              </h1>
+        {hasStartedChat ? (
+          /* Chat mode — sticky input layout */
+          <main className="flex-1 min-w-0 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0 px-4 md:px-6 pt-6 pb-4">
+              <div className="max-w-[600px] mx-auto w-full flex-1 flex flex-col min-h-0">
+                <ChatArea
+                  messages={messages}
+                  inputValue={inputValue}
+                  onInputChange={setInputValue}
+                  onSubmit={handleSubmit}
+                  isLoading={isLoading}
+                  isLoadingMessages={isLoadingMessages}
+                  disabled={limitReached}
+                  scoutBrief={scoutBrief}
+                  scoutTags={scoutTags}
+                  scoutEntities={scoutEntities}
+                />
 
-              {!hasStartedChat ? (
+                {/* Remaining messages indicator */}
+                {remainingMessages !== null && !limitReached && (
+                  <p className="text-xs text-muted-foreground text-center shrink-0 pt-2">
+                    {remainingMessages} message{remainingMessages !== 1 ? "s" : ""} remaining today
+                  </p>
+                )}
+
+                {/* Limit reached banner */}
+                {limitReached && (
+                  <div className="shrink-0 pt-2">
+                    <LimitBanner isGuest={isGuest} />
+                  </div>
+                )}
+
+                {/* Guest banner - show after first exchange */}
+                {isGuest && !limitReached && messages.length >= 2 && (
+                  <div className="shrink-0 pt-2">
+                    <GuestBanner />
+                  </div>
+                )}
+              </div>
+            </div>
+          </main>
+        ) : (
+          /* Hero mode — normal scroll layout */
+          <main className="flex-1 min-w-0">
+            <section className="py-16 md:py-24 px-4 md:px-6">
+              <div className="max-w-[800px] mx-auto text-center space-y-8">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground text-balance">
+                  World&apos;s most complete trophy fishing database
+                </h1>
+
                 <div className="max-w-[600px] mx-auto space-y-4">
                   <ChatInput
                     value={inputValue}
@@ -218,49 +259,13 @@ function HomeContent() {
                     ))}
                   </p>
                 </div>
-              ) : (
-                <div className="max-w-[600px] mx-auto space-y-4">
-                  <ChatArea
-                    messages={messages}
-                    inputValue={inputValue}
-                    onInputChange={setInputValue}
-                    onSubmit={handleSubmit}
-                    isLoading={isLoading}
-                    isLoadingMessages={isLoadingMessages}
-                    disabled={limitReached || scoutStatus !== "active"}
-                    scoutBrief={scoutBrief}
-                    scoutTags={scoutTags}
-                    scoutEntities={scoutEntities}
-                  />
+              </div>
+            </section>
 
-                  {/* Remaining messages indicator */}
-                  {remainingMessages !== null && !limitReached && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      {remainingMessages} message{remainingMessages !== 1 ? "s" : ""} remaining today
-                    </p>
-                  )}
-
-                  {/* Limit reached banner */}
-                  {limitReached && (
-                    <LimitBanner isGuest={isGuest} />
-                  )}
-
-                  {/* Guest banner - show after first exchange */}
-                  {isGuest && !limitReached && messages.length >= 2 && (
-                    <GuestBanner />
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
-
-          {!hasStartedChat && (
-            <>
-              <ValueProps />
-              <Coverage />
-            </>
-          )}
-        </main>
+            <ValueProps />
+            <Coverage />
+          </main>
+        )}
       </div>
 
       {!hasStartedChat && <Footer />}
