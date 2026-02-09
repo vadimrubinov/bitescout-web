@@ -126,6 +126,20 @@ function HomeContent() {
     setSidebarRefresh((n) => n + 1)
   }
 
+  const handleScoutDeleted = (deletedScoutId: string) => {
+    if (scoutId === deletedScoutId) {
+      setMessages([])
+      setSessionId(null)
+      setChatId(null)
+      setScoutId(null)
+      setScoutBrief(null)
+      setScoutTags("")
+      setScoutEntities("")
+      setScoutStatus("active")
+      setHasStartedChat(false)
+    }
+  }
+
   const handleSelectScout = async (selectedScoutId: string) => {
     setScoutId(selectedScoutId)
     setSessionId(null)
@@ -182,6 +196,7 @@ function HomeContent() {
             activeScoutId={scoutId}
             onSelectScout={handleSelectScout}
             onNewScout={handleNewScout}
+            onScoutDeleted={handleScoutDeleted}
             refreshTrigger={sidebarRefresh}
           />
         )}
