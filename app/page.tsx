@@ -162,7 +162,7 @@ function HomeContent() {
 
       if (data.type === "brief") {
         // Completed/archived scout — show brief card
-        setScoutBrief(data.brief || "")
+        setScoutBrief(data.briefUser || data.brief || "")
         setScoutTags(data.tags || "")
         setScoutEntities(data.entities || "")
         setScoutStatus(data.status || "completed")
