@@ -2,6 +2,7 @@
 
 import { ChatMessage } from "./ChatMessage"
 import { ChatInput } from "./ChatInput"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface Message {
   role: "user" | "assistant"
@@ -18,6 +19,7 @@ interface ChatAreaProps {
   scoutBrief?: string | null
   scoutTags?: string
   scoutEntities?: string
+  isLoadingMessages?: boolean
 }
 
 function parseTags(raw: string): string[] {
@@ -26,7 +28,6 @@ function parseTags(raw: string): string[] {
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) return parsed
   } catch {
-    // Fallback: comma-separated
     return raw.split(",").map((t: string) => t.trim()).filter(Boolean)
   }
   return []
@@ -39,6 +40,20 @@ function parseEntities(raw: string): Array<{ name: string; vendor_id?: string; t
     if (Array.isArray(parsed)) return parsed
   } catch {}
   return []
+}
+
+function MessagesSkeleton() {
+  return (
+    <div className="space-y-6">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="text-left space-y-2">
+          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function ScoutBriefCard({
@@ -54,7 +69,7 @@ function ScoutBriefCard({
   const parsedEntities = parseEntities(entities)
 
   return (
-    <div className="w-full rounded-lg border border-border bg-muted/20 p-5 space-y-4">
+    <div className="w-full rounded-lg border border-border bg-muted/20 p-5 space-y-4 text-left">
       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
         <span>📋</span>
         <span>Scout Summary</span>
@@ -101,12 +116,33 @@ export function ChatArea({
   scoutBrief,
   scoutTags = "",
   scoutEntities = "",
+  isLoadingMessages = false,
 }: ChatAreaProps) {
-  // If we have a brief, show it instead of messages
+  // Loading messages (opening a scout)
+  if (isLoadingMessages) {
+    return (
+      <div className="w-full space-y-6">
+        <MessagesSkeleton />
+      </div>
+    )
+  }
+
+  // Completed scout with brief — show brief + input for continuation
   if (scoutBrief) {
     return (
       <div className="w-full space-y-6">
         <ScoutBriefCard brief={scoutBrief} tags={scoutTags} entities={scoutEntities} />
+        {!disabled && (
+          <ChatInput
+            value={inputValue}
+            onChange={onInputChange}
+            onSubmit={onSubmit}
+            isLoading={isLoading}
+            placeholder="Continue this conversation..."
+            buttonText="Send →"
+            rows={2}
+          />
+        )}
       </div>
     )
   }

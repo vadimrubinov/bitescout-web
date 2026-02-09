@@ -11,6 +11,7 @@ import { Coverage } from "@/components/Coverage"
 import { GuestBanner } from "@/components/GuestBanner"
 import { LimitBanner } from "@/components/LimitBanner"
 import { Sidebar } from "@/components/Sidebar"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 interface Message {
   role: "user" | "assistant"
@@ -22,11 +23,12 @@ const exampleQueries = [
   "Cheapest salmon fishing near Vancouver",
 ]
 
-export default function Home() {
+function HomeContent() {
   const { isSignedIn } = useUser()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [hasStartedChat, setHasStartedChat] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [chatId, setChatId] = useState<string | null>(null)
@@ -134,7 +136,7 @@ export default function Home() {
     setScoutTags("")
     setScoutEntities("")
     setScoutStatus("active")
-    setIsLoading(true)
+    setIsLoadingMessages(true)
 
     try {
       const res = await fetch("/api/scout-messages", {
@@ -154,7 +156,7 @@ export default function Home() {
       } else {
         // Active scout — show raw messages
         setScoutBrief(null)
-        const msgs: Message[] = (data.messages || []).map((m: any) => ({
+        const msgs: Message[] = (data.messages || []).map((m: { role: string; content: string }) => ({
           role: m.role as "user" | "assistant",
           content: m.content,
         }))
@@ -163,7 +165,7 @@ export default function Home() {
     } catch {
       setMessages([])
     } finally {
-      setIsLoading(false)
+      setIsLoadingMessages(false)
     }
   }
 
@@ -224,6 +226,7 @@ export default function Home() {
                     onInputChange={setInputValue}
                     onSubmit={handleSubmit}
                     isLoading={isLoading}
+                    isLoadingMessages={isLoadingMessages}
                     disabled={limitReached || scoutStatus !== "active"}
                     scoutBrief={scoutBrief}
                     scoutTags={scoutTags}
@@ -265,3 +268,10 @@ export default function Home() {
   )
 }
 
+export default function Home() {
+  return (
+    <ErrorBoundary>
+      <HomeContent />
+    </ErrorBoundary>
+  )
+}

@@ -1,3 +1,5 @@
+import Markdown from "react-markdown"
+
 interface ChatMessageProps {
   role: "user" | "assistant"
   content: string
@@ -11,9 +13,15 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
       <p className="text-xs font-medium mb-1 opacity-70">
         {isUser ? "You" : "Scout"}
       </p>
-      <div className={`text-sm whitespace-pre-wrap ${isUser ? "text-muted-foreground" : "text-foreground"}`}>
-        {content}
-      </div>
+      {isUser ? (
+        <div className="text-sm whitespace-pre-wrap text-muted-foreground">
+          {content}
+        </div>
+      ) : (
+        <div className="text-sm text-foreground scout-markdown">
+          <Markdown>{content}</Markdown>
+        </div>
+      )}
     </div>
   )
 }

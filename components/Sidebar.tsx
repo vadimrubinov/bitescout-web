@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface Scout {
   recordId: string
@@ -48,6 +49,19 @@ function parseTags(raw: string): string[] {
     return raw.split(",").map((t: string) => t.trim()).filter(Boolean).slice(0, 3)
   }
   return []
+}
+
+function SidebarSkeleton() {
+  return (
+    <div className="py-1 space-y-1">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="px-3 py-2 space-y-2">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigger }: SidebarProps) {
@@ -115,7 +129,7 @@ export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigg
 
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <p className="p-3 text-sm text-muted-foreground">Loading...</p>
+            <SidebarSkeleton />
           ) : scouts.length === 0 ? (
             <p className="p-3 text-sm text-muted-foreground">No scouts yet</p>
           ) : (
@@ -162,4 +176,3 @@ export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigg
     </>
   )
 }
-
