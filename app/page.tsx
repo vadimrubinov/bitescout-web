@@ -170,7 +170,7 @@ function HomeContent() {
   }
 
   return (
-    <div className={hasStartedChat ? "h-screen flex flex-col overflow-hidden" : "min-h-screen flex flex-col"}>
+    <div className={hasStartedChat ? "h-screen flex flex-col" : "min-h-screen flex flex-col"}>
       <div className="shrink-0">
         <Header />
       </div>
@@ -270,7 +270,9 @@ function HomeContent() {
         )}
       </div>
 
-      {!hasStartedChat && <Footer />}
+      <div className="shrink-0">
+        <Footer />
+      </div>
     </div>
   )
 }

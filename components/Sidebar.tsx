@@ -109,7 +109,7 @@ export function Sidebar({ activeScoutId, onSelectScout, onNewScout, refreshTrigg
       <aside
         className={`
           fixed md:sticky top-0 left-0 z-40
-          h-screen w-64 bg-muted/30 border-r border-border
+          h-full w-64 bg-muted/30 border-r border-border
           flex flex-col
           transition-transform duration-200
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
