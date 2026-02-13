@@ -53,6 +53,14 @@ function HomeContent() {
           setLimitReached(data.limitReached || false)
         })
         .catch(() => {})
+      // C-07: Restore pending message after registration
+      try {
+        const pending = localStorage.getItem("bitescout_pending_message")
+        if (pending) {
+          localStorage.removeItem("bitescout_pending_message")
+          setInputValue(pending)
+        }
+      } catch {}
     }
   }, [isSignedIn])
 
@@ -83,7 +91,11 @@ function HomeContent() {
       if (data.remainingMessages !== null && data.remainingMessages !== undefined) {
         setRemainingMessages(data.remainingMessages)
       }
-      if (data.limitReached) setLimitReached(true)
+      if (data.limitReached) {
+        setLimitReached(true)
+        // C-07: Save the message so it can be restored after registration
+        try { localStorage.setItem("bitescout_pending_message", userMessage) } catch {}
+      }
 
       // Refresh sidebar after first message (new scout appears in list)
       if (!scoutId && data.scoutId) {
